@@ -8,7 +8,7 @@ set -x
 xhost +local:docker
 
 echo "Searching for Docker image ..."
-DOCKER_IMAGE_ID=$(docker images --format="{{.ID}}" docker-gqrx:latest | head -n 1)
+DOCKER_IMAGE_ID=$(docker images --format="{{.ID}}" docker-gqrx:16.04| head -n 1)
 echo "Found and using ${DOCKER_IMAGE_ID}"
 
 USER_UID=$(id -u)
@@ -30,5 +30,11 @@ docker run -t -i \
   --env=DISPLAY=${DISPLAY} \
   --env=LIBUSB_DEBUG=1 \
   --group-add=plugdev \
+  --rm \
+  --volume=$PWD:/docker \
+  --name docker-gqrx \
   ${DOCKER_IMAGE_ID} \
   ${@}
+
+xhost -local:docker
+
