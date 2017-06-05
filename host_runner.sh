@@ -13,8 +13,16 @@ echo "Found and using ${DOCKER_IMAGE_ID}"
 
 USER_UID=$(id -u)
 
-DOCKER_DEVICES=""
-for DEVICE in /dev/hackrf-*
+DOCKER_DEVICES=
+# hackrf
+for DEVICE in $(ls /dev/hackrf-*);
+do
+  echo "Adding ${DEVICE} to container"
+  DEVICE_DIRECT=$(readlink -f ${DEVICE})
+  DOCKER_DEVICES="${DOCKER_DEVICES} --device=${DEVICE_DIRECT}"
+done
+# rtlsdr
+for DEVICE in $(ls /dev/rtl_sdr-*);
 do
   echo "Adding ${DEVICE} to container"
   DEVICE_DIRECT=$(readlink -f ${DEVICE})
@@ -30,6 +38,7 @@ docker run -t -i \
   --env=DISPLAY=${DISPLAY} \
   --env=LIBUSB_DEBUG=1 \
   --group-add=plugdev \
+  --group-add=video \
   --rm \
   --volume=$PWD:/docker \
   --name docker-gqrx \

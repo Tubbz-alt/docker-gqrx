@@ -26,11 +26,29 @@ RUN add-apt-repository --yes ppa:ettusresearch/uhd \
  && add-apt-repository --yes ppa:myriadrf/drivers \
  && add-apt-repository --yes ppa:myriadrf/gnuradio \
  && add-apt-repository --yes ppa:gqrx/gqrx-sdr \
- && apt-get update \
- && apt-get install --yes --no-install-recommends gqrx-sdr libhackrf0
+ && apt-get update 
+
+RUN apt-get install --yes --no-install-recommends gqrx-sdr libhackrf0 \
+ && apt-get install --yes --no-install-recommends rtl-sdr
 
 
 RUN apt-get install --yes sudo gnuradio vim
+RUN apt-get install --yes kmod initramfs-tools
+
+# do these steps on your host not docker
+# http://www.rtl-sdr.com/rtl-sdr-quick-start-guide/
+# rtlsdr
+# Kernel driver is active, or device is claimed by second instance of librtlsdr.
+# In the first case, please either detach or blacklist the kernel module
+# (dvb_usb_rtl28xxu), or enable automatic detaching at compile time.
+# To unload them temporarily type “sudo rmmod dvb_usb_rtl28xxu” into terminal
+#RUN echo "blacklist dvb_usb_rtl28xxu" >> /etc/modprobe.d/blacklist.conf
+#RUN echo "blacklist e4000" >> /etc/modprobe.d/blacklist.conf
+#RUN echo "blacklist rtl2832" >> /etc/modprobe.d/blacklist.conf
+#RUN echo "blacklist dvb_usb_rtl28xxu" > /etc/modprobe.d/dvb_usb_rtl28xxu.conf
+# RUN depmod -ae
+#RUN update-initramfs -v -u
+
 
 # clean up
 RUN echo "${BUILD_PACKAGES}" | xargs apt-get purge --yes \
@@ -53,7 +71,8 @@ RUN mkdir -p ${HOME} && \
     echo "${UNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${UNAME} && \
     chmod 0440 /etc/sudoers.d/${UNAME} && \
     chown ${UID}:${GID} -R ${HOME} && \
-    gpasswd --add ${UNAME} audio 
+    gpasswd --add ${UNAME} audio && \
+    gpasswd --add ${UNAME} video
 USER ${UNAME}
 ENV HOME=${HOME}
 
@@ -61,7 +80,6 @@ RUN cd ${HOME} && echo export QT_X11_NO_MITSHM=1>>.bashrc
 
 RUN mkdir -p ${HOME}/.config/gqrx/
 COPY default.conf ${HOME}/.config/gqrx/default.conf
-
 
 # run
 CMD ["/bin/bash"]
